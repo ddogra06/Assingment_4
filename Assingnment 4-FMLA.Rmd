@@ -1,0 +1,181 @@
+---
+title: "Assignment 4 - FMLA"
+author: "Deepika Dogra"
+date: "2026-10-31"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# a. Use only the numerical variables (1 to 9) to cluster the 21 firms.
+
+# Load the Dataset
+```{r}
+Pharma <- read.csv("~/ML/Pharmaceuticals.csv")
+
+head(Pharma)
+str(Pharma)
+summary(Pharma)
+dim(Pharma)
+```
+
+# Extract the numerical variables
+```{r}
+Pharma_numeric <- Pharma[, 3:11]
+
+# View selected variables
+
+head(Pharma_numeric)
+
+```
+#Check for missing values 
+```{r}
+sum(is.na(Pharma_numeric))
+```
+#Scale the variables
+```{r}
+# Standardize numerical variables
+Pharma_scaled <- scale(Pharma_numeric)
+
+# View standardized data
+head(Pharma_scaled)
+```
+
+
+#Run K-Means for k=2,3 and 4
+```{r}
+
+set.seed(123)
+
+k2 <- kmeans(Pharma_scaled,
+             centers = 2,
+             nstart = 25)
+
+k3 <- kmeans(Pharma_scaled,
+             centers = 3,
+             nstart = 25)
+
+k4 <- kmeans(Pharma_scaled,
+             centers = 4,
+             nstart = 25)
+```
+
+# Add Cluster labels to the Dataset
+```{r}
+Pharma$Cluster_k2 <- k2$cluster
+Pharma$Cluster_k3 <- k3$cluster
+Pharma$Cluster_k4 <- k4$cluster
+
+# View company cluster assignments
+head(Pharma)
+```
+# Compute Cluster Summaries for K = 2
+
+```{r}
+aggregate(Pharma_numeric,
+          by = list(Cluster = k2$cluster),
+          FUN = mean)
+```
+# For K = 3
+# Calculate average values 
+```{r}
+aggregate(Pharma_numeric,
+          by = list(Cluster = k3$cluster),
+          FUN = mean)
+```
+#Count companies in each cluster
+```{r}
+table(k3$cluster)
+```
+# K = 4
+## Calculate average values for each cluster
+```{r}
+
+aggregate(Pharma_numeric,
+          by = list(Cluster = k4$cluster),
+          FUN = mean)
+```
+# Count companies
+```{r}
+table(k4$cluster)
+```
+
+# Clustering Method Justification
+
+I selected the nine numerical variables for clustering and excluded the categorical variables. I standardized the variables using the `scale()` function because they have different measurement scales. This gives each variable equal weight in the clustering process.
+
+I used the K-Means algorithm with `nstart = 25` to obtain reliable clustering results. I tested 2, 3, and 4 clusters to compare different groupings and identify the most suitable number of clusters.
+
+#b. Interpret the clusters with respect to the numerical variables used in forming the clusters
+# Calculate cluster averages for K = 3
+
+```{r}
+cluster_summary <- aggregate(
+  Pharma_numeric,
+  by = list(Cluster = k3$cluster),
+  FUN = mean
+)
+
+round(cluster_summary, 2)
+```
+# The cluster averages help us understand how the companies differ in terms of their financial performance, profitability, growth, and risk.
+
+#c. Is there a pattern in the clusters with respect to the numerical variables (10 to 12)? (those not used in forming the clusters)
+
+
+
+```{r}
+#Recreate the cluster vector
+
+set.seed(123)
+
+k3 <- kmeans(Pharma_scaled, centers = 3, nstart = 25)
+
+#Add the cluster label to the pharma
+
+Pharma$Cluster_k3 <- k3$cluster
+
+length(Pharma$Cluster_k3)
+```
+
+```{r}
+
+#Check the pattern in categorical variables
+table(Pharma$Cluster_k3, Pharma$Median_Recommendation)
+
+table(Pharma$Cluster_k3, Pharma$Location)
+
+table(Pharma$Cluster_k3, Pharma$Exchange)
+```
+# Compare the numerical variables 10–12
+
+```{r}
+cluster_summary_10_12 <- aggregate(
+  Pharma[, 12:14],
+  by = list(Cluster = Pharma$Cluster_k3),
+  FUN = mean
+)
+
+round(cluster_summary_10_12, 2)
+```
+# On comparison, three clusters using variables 10–12, which were not used to create the clusters. I also checked the companies' recommendations, locations, and stock exchanges to see if there were any similarities or differences between the groups.
+
+#Cluster 1 has companies with different recommendations, including Strong Buy, Moderate Buy, and Hold. 
+
+#Cluster 2 has the highest number of companies, with most receiving a Hold recommendation.Also companies in Cluster 2 are based in the US and listed on the NYSE. 
+
+#Cluster 3 mainly has Moderate Buy and Moderate Sell recommendations.Cluster 3 have and Cluster 1 and ore varied locations and exchange listings.
+
+# d. Provide an appropriate name for each cluster using any or all of the variables in the dataset.
+
+
+Cluster 1 – Mixed Recommendation Companies. They have different recommendations, such as Hold, Moderate Buy, and Strong Buy. They are also located in different countries.
+
+Cluster 2 – Large US-Based Companies. Most companies in this group are from the US and listed on the NYSE. Most of them received a Hold recommendation.
+
+Cluster 3 – International Growth Companies. This group includes companies from France, Ireland, and the US. They are listed on different stock exchanges and have different recommendations.
+
+Brief Clarification:
+
+I named each cluster based on its main characteristics. Cluster 2 mostly includes US-based companies listed on the NYSE, while Clusters 1 and 3 have a mix of locations and recommendations, making them more diverse groups.
+
